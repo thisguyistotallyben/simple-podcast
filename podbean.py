@@ -31,7 +31,7 @@ class Podbean():
         # file info
         fsize = os.path.getsize(path)
 
-        # setup request
+        # file authorize
         url = 'https://api.podbean.com/v1/files/uploadAuthorize'
         data = {
             'access_token': self.token,
@@ -39,8 +39,6 @@ class Podbean():
             'filesize': fsize,
             'content_type': 'audio/mpeg'
         }
-
-        # request
         r = requests.get(url, params=data).json()
 
         # error checking
@@ -52,12 +50,9 @@ class Podbean():
             self.presigned_url = r['presigned_url']
             self.file_key = r['file_key']
 
-        # print('URL THAT I NEED', self.presigned_url)
-        # request build
+        # file upload
         head = {'Content-Type': 'audio/mpeg'}
         files = {'testaudio.mp3': open(path, 'rb')}
-
-        # request
         r = requests.put(self.presigned_url, headers=head, files=files)
 
         print(r.status_code)
