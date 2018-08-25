@@ -3,8 +3,9 @@ import json
 from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtWidgets import *
 
-# import audio
+import audio
 import podbean
+
 
 class SimplePodcast(QtWidgets.QMainWindow):
     def __init__(self):
@@ -17,6 +18,9 @@ class SimplePodcast(QtWidgets.QMainWindow):
         self.top = 10
         self.width = 650
         self.height = 500
+
+        # start audio
+        self.audio = audio.Audio()
 
         # start podbean service
         with open('auth/podbean.txt', 'r') as f:
@@ -77,12 +81,10 @@ class SimplePodcast(QtWidgets.QMainWindow):
     # ## ACTIONS AND SIGNALS ## #
 
     def record_start_sig(self):
-        # start recording
-        print("fake recording now")
+        self.audio.start()
 
     def record_stop_sig(self):
-        # stop recording
-        print('fake stopped')
+        self.audio.stop()
 
     def upload_sig(self):
         # I don't even know yet
