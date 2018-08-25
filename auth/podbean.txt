@@ -1,0 +1,2 @@
+Replace this line with the client ID
+Replace this line with the client secret
