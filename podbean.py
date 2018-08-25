@@ -46,7 +46,7 @@ class Podbean():
             print('failed')
         else:
             print('Get Presigned URL success')
-            print(r)
+            # print(r)
             self.presigned_url = r['presigned_url']
             self.file_key = r['file_key']
 
@@ -55,13 +55,8 @@ class Podbean():
         files = {'testaudio.mp3': open(path, 'rb')}
         r = requests.put(self.presigned_url, headers=head, files=files)
 
-        print(r.status_code)
-        print(r.content)
-
-
-if __name__ == '__main__':
-    pb = Podbean('id', 'secret')
-
-    pb.auth()
-    pb.upload_audio('path/to/filename', 'filename.mp3')
-    print(pb.presigned_url)
+        # check for success
+        if r.status_code == 200:
+            print('200: File upload success')
+        # print(r.status_code)
+        # print(r.content)

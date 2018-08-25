@@ -3,6 +3,8 @@ import json
 from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtWidgets import *
 
+# import audio
+import podbean
 
 class SimplePodcast(QtWidgets.QMainWindow):
     def __init__(self):
@@ -16,8 +18,15 @@ class SimplePodcast(QtWidgets.QMainWindow):
         self.width = 650
         self.height = 500
 
-        # other variables
-        self.bots = {}
+        # start podbean service
+        with open('auth/podbean.txt', 'r') as f:
+            lines = f.readlines()
+            if len(lines) != 2:
+                raise IOError()
+            else:
+                pbid = lines[0].strip()
+                pbsecret = lines[1].strip()
+                self.pb = podbean.Podbean(pbid, pbsecret)
 
         # setup
         self.setupWindow()
@@ -37,14 +46,15 @@ class SimplePodcast(QtWidgets.QMainWindow):
 
         # define
         self.widgets['main'] = QWidget()
-        self.widgets['connserver'] = QPushButton('Connect to server')
-        self.widgets['botlistbutt'] = QPushButton('Get list of bots')
-        self.widgets['dothing'] = QPushButton('Do the thing')
+        self.widgets['record-start'] = QPushButton('Start recording')
+        self.widgets['record-stop'] = QPushButton('Stop recording')
+        self.widgets['upload'] = QPushButton('Upload podcast')
+        self.widgets['upload-stats'] = QWidget() # idk yet
 
         # connect
-        self.widgets['connserver'].clicked.connect(self.connect_server)
-        self.widgets['botlistbutt'].clicked.connect(self.botlistsig)
-        self.widgets['dothing'].clicked.connect(self.dothing)
+        self.widgets['record-start'].clicked.connect(self.record_start_sig)
+        self.widgets['record-stop'].clicked.connect(self.record_stop_sig)
+        self.widgets['upload'].clicked.connect(self.upload_sig)
 
     def setupLayouts(self):
         self.layouts = {}
@@ -55,37 +65,28 @@ class SimplePodcast(QtWidgets.QMainWindow):
     def build(self):
         # build main layout
         mainl = self.layouts['main']
-        mainl.addWidget(self.widgets['connserver'], 0, 0)
-        mainl.addWidget(self.widgets['dothing'], 0, 1)
+        mainl.addWidget(self.widgets['record-start'], 0, 0)
+        mainl.addWidget(self.widgets['record-stop'], 0, 1)
+        mainl.addWidget(self.widgets['upload'], 1, 0, 1, 2)
 
 
         self.widgets['main'].setLayout(mainl)
 
         self.setCentralWidget(self.widgets['main'])
 
-    # ## ACTIONS AND SIGNALS## #
-    def dothing(self):
-        # send
-        self.sock.sendall(str('htm dothing').encode())
+    # ## ACTIONS AND SIGNALS ## #
 
-        # receive
-        data = self.sock.recv(1024)
+    def record_start_sig(self):
+        # start recording
+        print("fake recording now")
 
-    def connect_server(self):
-        HOST = '10.0.0.16'
-        PORT = 50042
-        self.sock = socket.create_connection((HOST, PORT))
+    def record_stop_sig(self):
+        # stop recording
+        print('fake stopped')
 
-    def botlistsig(self):
-        # send
-        self.sock.sendall(str('botlist').encode())
-
-        # receive
-        data = self.sock.recv(1024)
-
-        # process
-        print('Received', data.decode())
-        self.bots = json.loads(data.decode())
+    def upload_sig(self):
+        # I don't even know yet
+        print('fake uploading')
 
 # QT IT UP
 app = QApplication(sys.argv)
