@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import *
 
 import audio
 import podbean
+import menubuilder
 
 
 class SimplePodcast(QtWidgets.QMainWindow):
@@ -14,7 +15,7 @@ class SimplePodcast(QtWidgets.QMainWindow):
         super().__init__()
 
         # window variables
-        self.title = 'Simple Podast'
+        self.title = 'Simple Podcast'
         self.left = 10
         self.top = 10
         self.width = 400
@@ -22,6 +23,12 @@ class SimplePodcast(QtWidgets.QMainWindow):
 
         # start audio
         self.audio = audio.Audio()
+
+        # setup menu
+        self.mb = menubuilder.MenuBuilder()
+        self.menub = self.menuBar()
+        self.menu = self.mb.generate(self, 'menu.json')
+        self.mb.set(self.menu, self.menub)
 
         # start podbean service
         with open('auth/podbean.txt', 'r') as f:
@@ -52,23 +59,23 @@ class SimplePodcast(QtWidgets.QMainWindow):
         # main widget
         self.widgets['main'] = QWidget()
 
-        # record box
-        self.widgets['record-box'] = QGroupBox('Step 1: Record')
-        self.widgets['record-start'] = QPushButton('Start recording')
-        self.widgets['record-stop'] = QPushButton('Stop recording')
-
-        # upload box
-        self.widgets['upload-box'] = QGroupBox('Step 2: Upload')
-        self.widgets['upload'] = QPushButton('Upload podcast')
-        self.widgets['upload-login'] = QLabel('Login')
-        self.widgets['upload-audio'] = QLabel('Uploading audio')
-
         # episode box
-        self.widgets['episode-box'] = QGroupBox('Episode Info')
+        self.widgets['episode-box'] = QGroupBox('Step 1: Episode Info')
         self.widgets['episode-title'] = QLabel('Title')
         self.widgets['episode-title-text'] = QLineEdit()
         self.widgets['episode-desc'] = QLabel('Description')
         self.widgets['episode-desc-text'] = QPlainTextEdit()
+
+        # record box
+        self.widgets['record-box'] = QGroupBox('Step 2: Get Audio')
+        self.widgets['record-start'] = QPushButton('Start recording')
+        self.widgets['record-stop'] = QPushButton('Stop recording')
+
+        # upload box
+        self.widgets['upload-box'] = QGroupBox('Step 3: Upload')
+        self.widgets['upload'] = QPushButton('Upload podcast')
+        self.widgets['upload-login'] = QLabel('Login')
+        self.widgets['upload-audio'] = QLabel('Uploading audio')
 
         # connect
         self.widgets['record-start'].clicked.connect(self.record_start_sig)
@@ -92,8 +99,9 @@ class SimplePodcast(QtWidgets.QMainWindow):
     def build(self):
         # build main layout
         mainl = self.layouts['main']
-        mainl.addWidget(self.widgets['record-box'], 0, 0)
-        mainl.addWidget(self.widgets['upload-box'], 1, 0)
+        mainl.addWidget(self.widgets['episode-box'], 0, 0)
+        mainl.addWidget(self.widgets['record-box'], 1, 0)
+        mainl.addWidget(self.widgets['upload-box'], 2, 0)
 
         # build record box layout
         recl = self.layouts['record']
@@ -102,7 +110,6 @@ class SimplePodcast(QtWidgets.QMainWindow):
 
         # build upload box layout
         upl = self.layouts['upload']
-        upl.addWidget(self.widgets['episode-box'], 0, 0)
         upl.addWidget(self.widgets['upload'], 1, 0)
         upl.addWidget(self.widgets['upload-login'], 2, 0)
         upl.addWidget(self.widgets['upload-audio'], 3, 0)

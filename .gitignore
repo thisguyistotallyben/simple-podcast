@@ -1,3 +1,7 @@
 auth/*
 *.swp
 __pycache__
+build
+dist
+*.wav
+*.spec
