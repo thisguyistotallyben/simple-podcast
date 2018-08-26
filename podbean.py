@@ -26,6 +26,7 @@ class Podbean():
         else:
             print('Auth success')
             self.token = r['access_token']
+            return True
 
     def upload_audio(self, path, fname):
         # file info
