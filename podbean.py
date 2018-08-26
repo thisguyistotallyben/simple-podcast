@@ -23,6 +23,7 @@ class Podbean():
         # TODO: clean this mess up
         if 'error' in r:
             print(f"failed\nreason: {r['error_description']}")
+            return False
         else:
             print('Auth success')
             self.token = r['access_token']

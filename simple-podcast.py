@@ -74,8 +74,8 @@ class SimplePodcast(QtWidgets.QMainWindow):
         # upload box
         self.widgets['upload-box'] = QGroupBox('Step 3: Upload')
         self.widgets['upload'] = QPushButton('Upload podcast')
-        self.widgets['upload-login'] = QLabel('Login')
-        self.widgets['upload-audio'] = QLabel('Uploading audio')
+        self.widgets['upload-prog'] = QProgressBar()
+        self.widgets['upload-text'] = QLabel()
 
         # connect
         self.widgets['record-start'].clicked.connect(self.record_start_sig)
@@ -84,8 +84,7 @@ class SimplePodcast(QtWidgets.QMainWindow):
 
         # options
         self.widgets['record-stop'].setDisabled(True)
-        self.widgets['upload-login'].setDisabled(True)
-        self.widgets['upload-audio'].setDisabled(True)
+        self.widgets['upload-prog'].setDisabled(True)
 
     def setupLayouts(self):
         self.layouts = {}
@@ -110,10 +109,9 @@ class SimplePodcast(QtWidgets.QMainWindow):
 
         # build upload box layout
         upl = self.layouts['upload']
-        upl.addWidget(self.widgets['upload'], 1, 0)
-        upl.addWidget(self.widgets['upload-login'], 2, 0)
-        upl.addWidget(self.widgets['upload-audio'], 3, 0)
-        upl.setRowStretch(4,4)
+        upl.addWidget(self.widgets['upload'], 0, 0)
+        upl.addWidget(self.widgets['upload-prog'], 1, 0)
+        upl.addWidget(self.widgets['upload-text'], 2, 0)
 
         # build episode box layout
         epl = self.layouts['episode']
@@ -143,23 +141,23 @@ class SimplePodcast(QtWidgets.QMainWindow):
         self.widgets['record-stop'].setDisabled(True)
 
     def upload_sig(self):
-        # I don't even know yet
-        print('fake uploading')
+        # set disabilities
+        self.widgets['upload'].setDisabled(True)
+        self.widgets['upload-prog'].setDisabled(False)
 
         # login
-        self.widgets['upload-login'].setDisabled(False)
-        self.widgets['upload-login'].setText('Login ...')
-        self.widgets['upload-login'].repaint()
+        self.widgets['upload-text'].setText('Logging in ...')
+        self.widgets['upload-text'].repaint()
         if self.pb.auth():
-            self.widgets['upload-login'].setText('Login ... Success')
-            self.widgets['upload-login'].setDisabled(True)
+            self.widgets['upload-prog'].setValue(33)
         else:
-            self.widgets['upload-login'].setText('Login ... Failed')
+            self.widgets['upload-text'].setText('Login ... Failed')
 
         # upload audio file
-        self.widgets['upload-audio'].setDisabled(False)
-        self.widgets['upload-audio'].setText('Uploading audio ...')
-        self.widgets['upload-audio'].repaint()
+        self.widgets['upload-text'].setText('Uploading audio ...')
+        self.widgets['upload-text'].repaint()
+        time.sleep(1)
+        self.widgets['upload-prog'].setValue(66)
 
 
         '''
