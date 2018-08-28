@@ -155,6 +155,7 @@ class SimplePodcast(QtWidgets.QMainWindow):
         self.widgets['upload-text'].setText('Uploading audio ...')
         self.widgets['upload-text'].repaint()
         time.sleep(1)
+        self.pb.upload_audio('testaudio.mp3', 'testaudio')
         self.widgets['upload-prog'].setValue(66)
 
 
