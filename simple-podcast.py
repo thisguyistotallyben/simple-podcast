@@ -4,9 +4,7 @@ import json
 from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtWidgets import *
 
-import audio
-import podbean
-import menubuilder
+from modules import audio, podbean, menubuilder
 
 
 class SimplePodcast(QtWidgets.QMainWindow):
@@ -27,11 +25,11 @@ class SimplePodcast(QtWidgets.QMainWindow):
         # setup menu
         self.mb = menubuilder.MenuBuilder()
         self.menub = self.menuBar()
-        self.menu = self.mb.generate(self, 'menu.json')
+        self.menu = self.mb.generate(self, 'config/menu.json')
         self.mb.set(self.menu, self.menub)
 
         # start podbean service
-        with open('auth/podbean.txt', 'r') as f:
+        with open('config/podbean.txt', 'r') as f:
             lines = f.readlines()
             if len(lines) != 2:
                 raise IOError()

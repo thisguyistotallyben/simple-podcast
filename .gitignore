@@ -1,4 +1,4 @@
-auth/*
+config/podbean.txt
 *.swp
 __pycache__
 build
