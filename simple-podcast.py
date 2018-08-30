@@ -154,9 +154,15 @@ class SimplePodcast(QtWidgets.QMainWindow):
         # upload audio file
         self.widgets['upload-text'].setText('Uploading audio ...')
         self.widgets['upload-text'].repaint()
-        time.sleep(1)
-        self.pb.upload_audio('testaudio.mp3', 'testaudio')
+        self.pb.upload_audio('testaudio.mp3', 'testaudio.mp3')
         self.widgets['upload-prog'].setValue(66)
+
+        # publish
+        title = self.widgets['episode-title-text'].text()
+        desc = self.widgets['episode-desc-text'].toPlainText()
+        print(title, desc)
+        self.widgets['upload-prog'].setDisabled(True)
+        # self.pb.publish_episode(title, desc, None, None)
 
 
         '''
