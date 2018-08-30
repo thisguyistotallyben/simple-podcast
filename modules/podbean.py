@@ -18,16 +18,36 @@ class Episode:
 
 class Podbean():
     def __init__(self, id, secret):
+        '''
+        Sets up most of the variables needed
+
+        param id: The client ID
+        param secret: The client secret
+        '''
+
         self.id = id
         self.secret = secret
         self.token = None
 
+        # urls for easy reading
+        self.auth_url = 'https://api.podbean.com/v1/oauth/token'
+        self.upload_url = 'https://api.podbean.com/v1/files/uploadAuthorize'
+        self.publish_url = 'https://api.podbean.com/v1/episodes/'
+
         # episode
         self.ep = Episode()
 
+    # ## AUTHORIZATION LAND # ##
+
     def auth(self):
-        # request
-        url = 'https://api.podbean.com/v1/oauth/token'
+        '''
+        Logs into the Podbean API to do anything.
+        This must be done before any uploading.
+
+        Limitations: Requires an app to be registered for each user using this.
+        '''
+
+        # request auth
         creds = (self.id, self.secret)
         data = {'grant_type': 'client_credentials'}
         r = requests.post(url, auth=creds, data=data).json()
@@ -43,19 +63,42 @@ class Podbean():
             self.scope = r['scope']
             return True
 
-    def upload_audio(self, fpath, fname):
-        return self.upload_file('audio/mpeg', fpath, fname)
+    def renew_auth(self):
+        '''
+        Renew the access token
+        I should probably do this to save so many requests
+        '''
+        return
 
-    def upload_image(self, fpath, fname):
-        # TODO: maybe autodetect image filetype?
-        return self.upload_file('image/jpeg', fpath, fname)
+    # ## FILE UPLOAD LAND ## #
 
-    def upload_file(self, ftype, fpath, fname):
-        if fpath is None:
-            return ''
+    def upload_file(self, fpath):
+        '''
+        Automatically determines what kind of file you are uploading and
+        uploads it if the file type is supported
+
+        param fpath: The file path to upload
+
+        returns: temporary key to use in episode publishing
+        '''
 
         # file info
-        fsize = os.path.getsize(fpath)
+        # fsize = os.path.getsize(fpath)
+        fext = fpath.rsplit('.', 1)[-1]
+        fname = fpath.rsplit('/', 1)[-1]
+
+        # get podbean suitable file type
+        if fext == 'mp3':
+            ftype = 'audio/mp3'
+        elif fext in ('jpg', 'jpeg', 'png'):
+            ftype = f'image/{fext}'
+        else:
+            ftype = ''
+            print('failure, you should probably handle this better')
+
+        print(fext, fname, ftype)
+
+        '''
 
         # file authorize
         url = 'https://api.podbean.com/v1/files/uploadAuthorize'
@@ -91,8 +134,10 @@ class Podbean():
             return self.file_key
         else:
             print('not 200: File Upload fail')
+        '''
 
-    # episode creation
+    # ## EPISODE LAND # ##
+
     def publish_episode(self, title, desc, audio_key, img_key):
         # check for Nones
         if audio_key is None:
