@@ -139,29 +139,34 @@ class SimplePodcast(QtWidgets.QMainWindow):
         self.widgets['record-stop'].setDisabled(True)
 
     def upload_sig(self):
+        # dictionaries are long to type
+        butt = self.widgets['upload']
+        prog = self.widgets['upload-prog']
+        text = self.widgets['upload-text']
+
         # set disabilities
-        self.widgets['upload'].setDisabled(True)
-        self.widgets['upload-prog'].setDisabled(False)
+        butt.setDisabled(True)
+        prog.setDisabled(False)
 
         # login
-        self.widgets['upload-text'].setText('Logging in ...')
-        self.widgets['upload-text'].repaint()
+        text.setText('Logging in ...')
+        text.repaint()
         if self.pb.auth():
-            self.widgets['upload-prog'].setValue(33)
+            prog.setValue(33)
         else:
-            self.widgets['upload-text'].setText('Login ... Failed')
+            text.setText('Login ... Failed')
 
         # upload audio file
-        self.widgets['upload-text'].setText('Uploading audio ...')
-        self.widgets['upload-text'].repaint()
-        self.pb.upload_audio('testaudio.mp3', 'testaudio.mp3')
-        self.widgets['upload-prog'].setValue(66)
+        text.setText('Uploading audio ...')
+        text.repaint()
+        self.pb.upload_file('testaudio.mp3')
+        prog.setValue(66)
 
         # publish
         title = self.widgets['episode-title-text'].text()
         desc = self.widgets['episode-desc-text'].toPlainText()
         print(title, desc)
-        self.widgets['upload-prog'].setDisabled(True)
+        prog.setDisabled(True) # not really for anything
         # self.pb.publish_episode(title, desc, None, None)
 
 
