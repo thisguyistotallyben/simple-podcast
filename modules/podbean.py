@@ -25,24 +25,6 @@ class Podbean():
         # episode
         self.ep = Episode()
 
-        # build episode
-        self.ep.title = title
-        self.ep.desc = desc
-        self.ep.audio_key = audio_key
-        self.ep.img = img_key
-
-        # make request
-        url = 'https://api.podbean.com/v1/episodes/'
-        data = {
-            'access_token': self.token,
-            'title': self.ep.title,
-            'type': 'public',
-            'status': 'publish'
-        }
-        r = requests.post(url, data=data).json()
-
-        print(r)
-
     def auth(self):
         # request
         url = 'https://api.podbean.com/v1/oauth/token'
@@ -117,3 +99,21 @@ class Podbean():
             audio_key = ''
         if img_key == None:
             img_key = ''
+
+    # build episode
+    self.ep.title = title
+    self.ep.desc = desc
+    self.ep.audio_key = audio_key
+    self.ep.img = img_key
+
+    # make request
+    url = 'https://api.podbean.com/v1/episodes/'
+    data = {
+        'access_token': self.token,
+        'title': self.ep.title,
+        'type': 'public',
+        'status': 'publish'
+    }
+    r = requests.post(url, data=data).json()
+
+    print(r)
