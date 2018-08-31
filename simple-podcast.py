@@ -7,6 +7,35 @@ from PyQt5.QtWidgets import *
 from modules import audio, podbean, menubuilder
 
 
+class PodbeanCreds(QtWidgets.QDialog):
+    def __init__(self, parent=None):
+        super(PodbeanCreds, self).__init__(parent)
+        self.idlabel = QLabel('Client ID')
+        self.secretlabel = QLabel('Client Secret')
+        self.id = QtWidgets.QLineEdit(self)
+        self.secret = QtWidgets.QLineEdit(self)
+        self.set = QtWidgets.QPushButton('Set', self)
+        self.set.clicked.connect(self.handleLogin)
+        layout = QGridLayout(self)
+        layout.addWidget(self.idlabel, 0, 0)
+        layout.addWidget(self.id, 0, 1)
+        layout.addWidget(self.secretlabel, 1, 0)
+        layout.addWidget(self.secret, 1, 1)
+        layout.addWidget(self.set, 2, 0, 1, 2)
+
+    def handleLogin(self):
+        if (self.id.text() == 'foo' and
+            self.secret.text() == 'bar'):
+            self.accept()
+        else:
+            QtWidgets.QMessageBox.warning(
+                self, 'Error', 'Bad user or password')
+
+    def enter_creds(self):
+        self.exec_()
+
+
+
 class SimplePodcast(QtWidgets.QMainWindow):
     def __init__(self):
         # formalities
@@ -29,6 +58,7 @@ class SimplePodcast(QtWidgets.QMainWindow):
         self.mb.set(self.menu, self.menub)
 
         # start podbean service
+        self.pbc = PodbeanCreds(self)
         with open('config/podbean.txt', 'r') as f:
             lines = f.readlines()
             if len(lines) != 2:
@@ -127,6 +157,9 @@ class SimplePodcast(QtWidgets.QMainWindow):
         self.setCentralWidget(self.widgets['main'])
 
     # ## ACTIONS AND SIGNALS ## #
+
+    def creds_sig(self):
+        self.pbc.exec_()
 
     def record_start_sig(self):
         self.audio.start()

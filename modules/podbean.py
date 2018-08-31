@@ -1,10 +1,12 @@
 # Author:  Benjamin Johnson
 # Version: 0.1
-# Purpose: A Python3 wrapper for the Podbean API
+# Purpose: A Python3 wrapper for the Podbean API (Python 3.6 or higher)
 
 import requests
 import json
 import os
+
+from pydub import AudioSegment
 
 
 # episode class
@@ -50,7 +52,7 @@ class Podbean():
         # request auth
         creds = (self.id, self.secret)
         data = {'grant_type': 'client_credentials'}
-        r = requests.post(url, auth=creds, data=data).json()
+        r = requests.post(self.auth_url, auth=creds, data=data).json()
 
         # error checking
         # TODO: clean this mess up
@@ -83,13 +85,13 @@ class Podbean():
         '''
 
         # file info
-        # fsize = os.path.getsize(fpath)
+        fsize = os.path.getsize(fpath)
         fext = fpath.rsplit('.', 1)[-1]
         fname = fpath.rsplit('/', 1)[-1]
 
         # get podbean suitable file type
         if fext == 'mp3':
-            ftype = 'audio/mp3'
+            ftype = f'audio/{fext}'
         elif fext in ('jpg', 'jpeg', 'png'):
             ftype = f'image/{fext}'
         else:
@@ -98,17 +100,14 @@ class Podbean():
 
         print(fext, fname, ftype)
 
-        '''
-
         # file authorize
-        url = 'https://api.podbean.com/v1/files/uploadAuthorize'
         data = {
             'access_token': self.token,
             'filename': fname,
             'filesize': fsize,
             'content_type': ftype
         }
-        r = requests.get(url, params=data).json()
+        r = requests.get(self.upload_url, params=data).json()
 
         # error checking
         if 'error' in r:
@@ -134,31 +133,33 @@ class Podbean():
             return self.file_key
         else:
             print('not 200: File Upload fail')
-        '''
 
     # ## EPISODE LAND # ##
 
-    def publish_episode(self, title, desc, audio_key, img_key):
-        # check for Nones
-        if audio_key is None:
-            audio_key = ''
-        if img_key == None:
-            img_key = ''
+    def publish_episode(self, **kwargs):
+        '''
+        Publishes an episode
+        TODO: Add full list of possible kwargs
+        '''
 
-        # build episode
-        self.ep.title = title
-        self.ep.desc = desc
-        self.ep.audio_key = audio_key
-        self.ep.img = img_key
+        # build POST data
+        # TODO: actually error check this
+        for k in kwargs.keys():
+            if k not in ('title', 'content', 'status', 'type', 'media_key'):
+                print('**kwargs is wrong')
+                return
 
-        # make request
-        url = 'https://api.podbean.com/v1/episodes/'
-        data = {
-            'access_token': self.token,
-            'title': self.ep.title,
-            'type': 'public',
-            'status': 'publish'
-        }
-        r = requests.post(url, data=data).json()
+        if 'status' not in kwargs.keys():
+            kwargs['status'] = 'publish'
+        if 'type' not in kwargs.keys():
+            kwargs['type'] = 'public'
+
+        kwargs['access_token'] = self.token
+
+        r = requests.post(self.publish_url, data=kwargs).json()
 
         print(r)
+
+    def convert(self):
+        audio = AudioSegment.from_wav('output.wav')
+        audio.export('maywork.mp3', format='mp3')
