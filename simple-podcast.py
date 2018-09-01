@@ -175,18 +175,47 @@ class SimplePodcast(QtWidgets.QMainWindow):
         '''
         TODO: make try/catch statements for these things
         '''
+
         # dictionaries are long to type
         butt = self.widgets['upload']
         prog = self.widgets['upload-prog']
         text = self.widgets['upload-text']
 
-        # set disabilities
+        # set GUI
         butt.setDisabled(True)
         prog.setDisabled(False)
+        prog.setValue(0)
 
-        # login
-        text.setText('Logging in ...')
-        text.repaint()
+        # big ol' try/catch
+        try:
+            # login
+            text.setText('Logging in ...')
+            text.repaint()
+            self.pb.auth()
+            prog.setValue(33)
+
+            # upload file
+            text.setText('Uploading audio ...')
+            text.repaint()
+            akey = self.pb.upload_file('audio.madeupext')
+            prog.setValue(66)
+
+            # publish episode
+            text.setText('Publishing episode ...')
+            text.repaint()
+            title = self.widgets['episode-title-text'].text()
+            desc = self.widgets['episode-desc-text'].toPlainText()
+            prog.setValue(100)
+            # publish episode on this line
+            text.setText('Episode published')
+        except podbean.PodbeanError as e:
+            prog.setDisabled(True)
+            butt.setDisabled(False)
+            text.setText(f'{text.text()} failed')
+            print(f'stage: {e.stage}\nreason: {e.reason}')
+
+
+        '''
         if self.pb.auth():
             prog.setValue(33)
         else:
@@ -195,7 +224,11 @@ class SimplePodcast(QtWidgets.QMainWindow):
         # upload audio file
         text.setText('Uploading audio ...')
         text.repaint()
-        akey = self.pb.upload_file('output.wav')
+        try:
+            akey = self.pb.upload_file('audio.madeupext')
+        except podbean.PodbeanError as e:
+            print(f'UH OH REASON: {e.reason}')
+            return
         prog.setValue(66)
 
         # publish
@@ -209,9 +242,6 @@ class SimplePodcast(QtWidgets.QMainWindow):
         prog.setValue(100)
         text.setText('Episode published')
         butt.setDisabled(False)
-
-        '''
-        self.pb.auth()
         '''
 
 # QT IT UP

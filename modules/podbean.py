@@ -85,7 +85,10 @@ class Podbean():
         '''
 
         # file info
-        fsize = os.path.getsize(fpath)
+        try:
+            fsize = os.path.getsize(fpath)
+        except FileNotFoundError as e:
+            raise PodbeanError('file upload', 'file does not exist')
         fext = fpath.rsplit('.', 1)[-1]
         fname = fpath.rsplit('/', 1)[-1]
 
@@ -102,8 +105,7 @@ class Podbean():
         elif fext in ('jpg', 'jpeg', 'png'):
             ftype = f'image/{fext}'
         else:
-            ftype = ''
-            print('failure, you should probably handle this better')
+            raise PodbeanError('file upload', f'unsupported file type {fext}')
 
         print(fext, fname, ftype)
 
@@ -118,7 +120,7 @@ class Podbean():
 
         # error checking
         if 'error' in r:
-            print('file auth failed')
+            raise PodbeanError('file upload', r['error_description'])
         else:
             print('Get Presigned URL success')
             # print(r)
@@ -127,8 +129,6 @@ class Podbean():
 
         # file upload
         head = {'Content-Type': ftype}
-        with open(fpath, 'rb') as f:
-            print(f)
         files = {'file': open(fpath, 'rb')}
         r = requests.put(self.presigned_url, headers=head, files=files)
 
@@ -139,7 +139,7 @@ class Podbean():
             print('200: File upload success')
             return self.file_key
         else:
-            print('not 200: File Upload fail')
+            raise PodbeanError('file upload', 'upload failed')
 
     # ## EPISODE LAND # ##
 
@@ -153,8 +153,7 @@ class Podbean():
         # TODO: actually error check this
         for k in kwargs.keys():
             if k not in ('title', 'content', 'status', 'type', 'media_key'):
-                print('**kwargs is wrong')
-                return
+                raise PodbeanError('publish episode', f'invalid arg {k}')
 
         # add necessary stuff
         kwargs['access_token'] = self.token
@@ -172,3 +171,13 @@ class Podbean():
         audio = AudioSegment.from_wav(fpath)
         # FIX THIS - JUST FOR TESTING
         audio.export('output.mp3', format='mp3')
+
+'''
+Exception Central
+'''
+
+# base exception
+class PodbeanError(Exception):
+    def __init__(self, stage, reason):
+        self.stage = stage
+        self.reason = reason
