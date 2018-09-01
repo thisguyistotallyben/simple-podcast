@@ -172,6 +172,9 @@ class SimplePodcast(QtWidgets.QMainWindow):
         self.widgets['record-stop'].setDisabled(True)
 
     def upload_sig(self):
+        '''
+        TODO: make try/catch statements for these things
+        '''
         # dictionaries are long to type
         butt = self.widgets['upload']
         prog = self.widgets['upload-prog']
@@ -192,16 +195,20 @@ class SimplePodcast(QtWidgets.QMainWindow):
         # upload audio file
         text.setText('Uploading audio ...')
         text.repaint()
-        self.pb.upload_file('testaudio.mp3')
+        akey = self.pb.upload_file('output.wav')
         prog.setValue(66)
 
         # publish
         title = self.widgets['episode-title-text'].text()
         desc = self.widgets['episode-desc-text'].toPlainText()
-        print(title, desc)
-        prog.setDisabled(True) # not really for anything
+        text.setText('Publishing episode ...')
+        text.repaint()
+        self.pb.publish_episode(title=title, content=desc, media_key=akey)
+        # prog.setDisabled(True) # not really for anything
         # self.pb.publish_episode(title, desc, None, None)
-
+        prog.setValue(100)
+        text.setText('Episode published')
+        butt.setDisabled(False)
 
         '''
         self.pb.auth()

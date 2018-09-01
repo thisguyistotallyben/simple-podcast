@@ -92,6 +92,13 @@ class Podbean():
         # get podbean suitable file type
         if fext == 'mp3':
             ftype = f'audio/{fext}'
+        if fext == 'wav':
+            print('Converting wav to mp3')
+            self.convert(fpath)
+            # TEMPORARY FOR NOW PLS FIX FPATH THANKS
+            fpath = 'output.mp3'
+            ftype = 'audio/mp3'
+            fname = 'output.mp3'
         elif fext in ('jpg', 'jpeg', 'png'):
             ftype = f'image/{fext}'
         else:
@@ -149,17 +156,19 @@ class Podbean():
                 print('**kwargs is wrong')
                 return
 
+        # add necessary stuff
+        kwargs['access_token'] = self.token
         if 'status' not in kwargs.keys():
             kwargs['status'] = 'publish'
         if 'type' not in kwargs.keys():
             kwargs['type'] = 'public'
 
-        kwargs['access_token'] = self.token
-
+        print(kwargs)
         r = requests.post(self.publish_url, data=kwargs).json()
 
         print(r)
 
-    def convert(self):
-        audio = AudioSegment.from_wav('output.wav')
-        audio.export('maywork.mp3', format='mp3')
+    def convert(self, fpath):
+        audio = AudioSegment.from_wav(fpath)
+        # FIX THIS - JUST FOR TESTING
+        audio.export('output.mp3', format='mp3')
