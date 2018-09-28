@@ -59,16 +59,12 @@ class SimplePodcast(QtWidgets.QMainWindow):
             self.settings = json.load(f)
         print(self.settings)
 
-        # start podbean service
         self.pbc = PodbeanCreds(self)
-        with open('config/podbean.txt', 'r') as f:
-            lines = f.readlines()
-            if len(lines) != 2:
-                raise IOError()
-            else:
-                pbid = lines[0].strip()
-                pbsecret = lines[1].strip()
-                self.pb = podbean.Podbean(pbid, pbsecret)
+
+        # start podbean service
+        pbid = self.settings['podbean']['id']
+        pbsecret = self.settings['podbean']['secret']
+        self.pb = podbean.Podbean(pbid, pbsecret)
 
         # setup
         self.setupWindow()
@@ -170,7 +166,11 @@ class SimplePodcast(QtWidgets.QMainWindow):
         self.pbc.exec_()
 
     def file_sig(self):
-        name, _ = QFileDialog.getOpenFileName(self, 'Open File', '.')
+        loc = self.settings['last file location']
+        name, _ = QFileDialog.getOpenFileName(self, 'Open File', loc)
+        if name != '':
+            # get location and store it for next time
+            print(name.rsplit('/', 1))
 
     def upload_sig(self):
         # dictionaries are long to type
@@ -254,6 +254,8 @@ class SimplePodcast(QtWidgets.QMainWindow):
         text.setText('Episode published')
         butt.setDisabled(False)
         '''
+    def clean(self):
+        print('cleanup')
 
 # QT IT UP
 app = QApplication(sys.argv)
