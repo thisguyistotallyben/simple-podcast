@@ -305,7 +305,7 @@ class SimplePodcast(QtWidgets.QMainWindow):
             self,
             'Open File',
             loc,
-            filter='*.jpg;;*.jpeg;;*.png')
+            filter='Images (*.jpg *.JPG *.jpeg *.JPEG *.png *.PNG)')
         if name != '':
             filepath = name.rsplit('/', 1)
             # get location and store it for next time
