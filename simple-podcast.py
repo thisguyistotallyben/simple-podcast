@@ -27,6 +27,7 @@ class Settings(QMainWindow):
 
         # widgets
         self.main = QWidget()
+
         self.authbox = QGroupBox('Podbean Authentication')
         self.authidl = QLabel('Client ID')
         self.authid = QLineEdit()
@@ -41,10 +42,22 @@ class Settings(QMainWindow):
 
         self.authbutt.clicked.connect(self.cred_update_sig)
 
+        self.defbox = QGroupBox('Default Podcast Logo')
+        self.defbutt = QPushButton('Choose File')
+        self.deftext = QLabel()
+
+        logo = self.parent.config['default logo']
+        if logo == '':
+            self.deftext.setText('No default logo chosen')
+        else:
+            self.deftext.setText(logo)
+
         # layouts
         self.authlay = QGridLayout()
+        self.deflay = QGridLayout()
         self.lay = QGridLayout()
         self.authbox.setLayout(self.authlay)
+        self.defbox.setLayout(self.deflay)
         self.main.setLayout(self.lay)
 
         # put things in the stuff
@@ -54,8 +67,13 @@ class Settings(QMainWindow):
         self.authlay.addWidget(self.authsecret, 1, 1, 1, 2)
         self.authlay.addWidget(self.authbutt, 2, 0)
 
+        self.deflay.addWidget(self.defbutt, 0, 0)
+        self.deflay.addWidget(self.deftext, 0, 1)
+        self.deflay.setColumnStretch(1, 4)
+
         self.lay.addWidget(self.authbox)
-        self.lay.setRowStretch(1, 4)
+        self.lay.addWidget(self.defbox)
+        self.lay.setRowStretch(2, 4)
 
         self.setCentralWidget(self.main)
 
@@ -71,9 +89,19 @@ class Settings(QMainWindow):
             self.authbutt.setText('Set')
 
         if state == 'Set':
+            # set GUI
             self.authid.setDisabled(True)
             self.authsecret.setDisabled(True)
             self.authbutt.setText('Update')
+
+            # update everything
+            id = self.authid.text()
+            secret = self.authsecret.text()
+
+            self.parent.config['podbean']['id'] = id
+            self.parent.config['podbean']['secret'] = secret
+            self.parent.update_config
+            self.parent.pb.update_credentials(id, secret)
         '''
         id = self.authid.text()
         secret = self.authsecret.text()
@@ -111,6 +139,7 @@ class SimplePodcast(QtWidgets.QMainWindow):
 
         # audio file
         self.audio_file = ''
+        self.logo_file = self.config['default logo']
 
         # setup
         self.setupWindow()
@@ -141,13 +170,18 @@ class SimplePodcast(QtWidgets.QMainWindow):
         self.widgets['episode-desc'] = QLabel('Description')
         self.widgets['episode-desc-text'] = QPlainTextEdit()
 
-        # record box
-        self.widgets['record-box'] = QGroupBox('Step 2: Get Audio')
-        self.widgets['record-file'] = QPushButton('Choose file')
-        self.widgets['record-text'] = QLabel('No audio selected')
+        # audio box
+        self.widgets['audio-box'] = QGroupBox('Step 2: Select Audio')
+        self.widgets['audio-file'] = QPushButton('Choose file')
+        self.widgets['audio-text'] = QLabel('No audio selected')
+
+        # logo box
+        self.widgets['logo-box'] = QGroupBox('Step 3: Select Logo')
+        self.widgets['logo-file'] = QPushButton('Choose File')
+        self.widgets['logo-text'] = QLabel('No image selected')
 
         # upload box
-        self.widgets['upload-box'] = QGroupBox('Step 3: Upload')
+        self.widgets['upload-box'] = QGroupBox('Step 4: Upload')
         self.widgets['upload-publish'] = QRadioButton('Publish')
         self.widgets['upload-draft'] = QRadioButton('Draft')
         self.widgets['upload'] = QPushButton('Upload podcast')
@@ -156,10 +190,15 @@ class SimplePodcast(QtWidgets.QMainWindow):
 
         # connect
         self.widgets['upload'].clicked.connect(self.upload_sig)
-        self.widgets['record-file'].clicked.connect(self.file_sig)
+        self.widgets['audio-file'].clicked.connect(self.audio_sig)
+        self.widgets['logo-file'].clicked.connect(self.logo_sig)
 
         # setup
         self.widgets['upload-publish'].setChecked(True)
+
+        logo = self.config['default logo']
+        if logo != '':
+            self.widgets['logo-text'].setText(logo.rsplit('/', 1)[1])
 
         '''
         THIS PART IS SPECIFIC TO A CHURCH PODCAST AUTO NAMING SCHEME
@@ -172,14 +211,15 @@ class SimplePodcast(QtWidgets.QMainWindow):
         month = calendar.month_name[t.month]
         day = t.day
 
+        # set title
         title = ''
-
         if t.hour < 14:
             title = 'Morning'
         else:
             title = 'Evening'
-
         title = f'{title} Service - {month} {day}, {year}'
+
+        # set title box
         self.widgets['episode-title-text'].setText(title)
 
         '''
@@ -191,7 +231,8 @@ class SimplePodcast(QtWidgets.QMainWindow):
 
         # define
         self.layouts['main'] = QGridLayout()
-        self.layouts['record'] = QGridLayout()
+        self.layouts['audio'] = QGridLayout()
+        self.layouts['logo'] = QGridLayout()
         self.layouts['upload'] = QGridLayout()
         self.layouts['episode'] = QGridLayout()
 
@@ -199,14 +240,21 @@ class SimplePodcast(QtWidgets.QMainWindow):
         # build main layout
         mainl = self.layouts['main']
         mainl.addWidget(self.widgets['episode-box'], 0, 0)
-        mainl.addWidget(self.widgets['record-box'], 1, 0)
-        mainl.addWidget(self.widgets['upload-box'], 2, 0)
+        mainl.addWidget(self.widgets['audio-box'], 1, 0)
+        mainl.addWidget(self.widgets['logo-box'], 2, 0)
+        mainl.addWidget(self.widgets['upload-box'], 3, 0)
 
-        # build record box layout
-        recl = self.layouts['record']
-        recl.addWidget(self.widgets['record-file'], 0, 0)
-        recl.addWidget(self.widgets['record-text'], 0, 1)
+        # build audio box layout
+        recl = self.layouts['audio']
+        recl.addWidget(self.widgets['audio-file'], 0, 0)
+        recl.addWidget(self.widgets['audio-text'], 0, 1)
         recl.setColumnStretch(1, 4)
+
+        # build logo box layout
+        logl = self.layouts['logo']
+        logl.addWidget(self.widgets['logo-file'], 0, 0)
+        logl.addWidget(self.widgets['logo-text'], 0, 1)
+        logl.setColumnStretch(1, 4)
 
         # build upload box layout
         upl = self.layouts['upload']
@@ -226,7 +274,8 @@ class SimplePodcast(QtWidgets.QMainWindow):
 
         # set layouts
         self.widgets['main'].setLayout(mainl)
-        self.widgets['record-box'].setLayout(recl)
+        self.widgets['audio-box'].setLayout(recl)
+        self.widgets['logo-box'].setLayout(logl)
         self.widgets['upload-box'].setLayout(upl)
         self.widgets['episode-box'].setLayout(epl)
 
@@ -238,20 +287,31 @@ class SimplePodcast(QtWidgets.QMainWindow):
         #self.pbc.exec_()
         self.settings.show()
 
-    def file_sig(self):
+    def audio_sig(self):
         loc = self.config['last audio location']
+        name, _ = QFileDialog.getOpenFileName(self, 'Open File', loc,
+            filter='*.mp3')
+        if name != '':
+            self.audio_file
+            filepath = name.rsplit('/', 1)
+            # get location and store it for next time
+            self.config['last audio location'] = filepath[0]
+            self.update_config()
+            self.widgets['audio-text'].setText(filepath[1])
+
+    def logo_sig(self):
+        loc = self.config['last image location']
         name, _ = QFileDialog.getOpenFileName(
             self,
             'Open File',
             loc,
-            filter='*.mp3')
+            filter='*.jpg;;*.jpeg;;*.png')
         if name != '':
             filepath = name.rsplit('/', 1)
             # get location and store it for next time
-            self.config['last audio location'] = filepath[0]
-            with open('config/config.json', 'w') as f:
-                json.dump(self.settings, f)
-            self.widgets['record-text'].setText(filepath[1])
+            self.config['last image location'] = filepath[0]
+            self.update_config()
+            self.widgets['logo-text'].setText(filepath[1])
 
     def upload_sig(self):
         # dictionaries take too long to type
@@ -311,8 +371,9 @@ class SimplePodcast(QtWidgets.QMainWindow):
             text.setText(f'{text.text()} failed')
             print(f'stage: {e.stage}\nreason: {e.reason}')
 
-    def clean(self):
-        print('cleanup')
+    def update_config(self):
+        with open('config/config.json', 'w') as f:
+            json.dump(self.config, f)
 
 # QT IT UP
 app = QApplication(sys.argv)
