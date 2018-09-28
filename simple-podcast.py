@@ -170,7 +170,9 @@ class SimplePodcast(QtWidgets.QMainWindow):
         name, _ = QFileDialog.getOpenFileName(self, 'Open File', loc)
         if name != '':
             # get location and store it for next time
-            print(name.rsplit('/', 1))
+            self.settings['last file location'] = name.rsplit('/', 1)[0]
+            with open('config/config.json', 'w') as f:
+                json.dump(self.settings, f)
 
     def upload_sig(self):
         # dictionaries are long to type
