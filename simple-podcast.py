@@ -66,6 +66,9 @@ class SimplePodcast(QtWidgets.QMainWindow):
         pbsecret = self.settings['podbean']['secret']
         self.pb = podbean.Podbean(pbid, pbsecret)
 
+        # audio file
+        self.audio_file = ''
+
         # setup
         self.setupWindow()
         self.setupWidgets()
@@ -167,7 +170,11 @@ class SimplePodcast(QtWidgets.QMainWindow):
 
     def file_sig(self):
         loc = self.settings['last file location']
-        name, _ = QFileDialog.getOpenFileName(self, 'Open File', loc)
+        name, _ = QFileDialog.getOpenFileName(
+            self,
+            'Open File',
+            loc,
+            filter='*.mp3')
         if name != '':
             # get location and store it for next time
             self.settings['last file location'] = name.rsplit('/', 1)[0]
