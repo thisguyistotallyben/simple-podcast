@@ -41,6 +41,10 @@ class Podbean():
 
     # ## AUTHORIZATION LAND # ##
 
+    def update_credentials(self, id, secret):
+        self.id = id
+        self.secret = secret
+
     def auth(self):
         '''
         Logs into the Podbean API to do anything.
@@ -152,7 +156,7 @@ class Podbean():
         # build POST data
         # TODO: actually error check this
         for k in kwargs.keys():
-            if k not in ('title', 'content', 'status', 'type', 'media_key'):
+            if k not in ('title', 'content', 'status', 'type', 'media_key', 'logo_key'):
                 raise PodbeanError('publish episode', f'invalid arg {k}')
 
         # add necessary stuff

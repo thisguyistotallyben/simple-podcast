@@ -1,39 +1,84 @@
 import time
 import sys
 import json
+import calendar
+from datetime import datetime
 from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtWidgets import *
 
 from modules import podbean, menubuilder
 
 
-class PodbeanCreds(QtWidgets.QDialog):
+class Settings(QMainWindow):
     def __init__(self, parent=None):
-        super(PodbeanCreds, self).__init__(parent)
-        self.idlabel = QLabel('Client ID')
-        self.secretlabel = QLabel('Client Secret')
-        self.id = QtWidgets.QLineEdit(self)
-        self.secret = QtWidgets.QLineEdit(self)
-        self.set = QtWidgets.QPushButton('Set', self)
-        self.set.clicked.connect(self.handleLogin)
-        layout = QGridLayout(self)
-        layout.addWidget(self.idlabel, 0, 0)
-        layout.addWidget(self.id, 0, 1)
-        layout.addWidget(self.secretlabel, 1, 0)
-        layout.addWidget(self.secret, 1, 1)
-        layout.addWidget(self.set, 2, 0, 1, 2)
+        super().__init__()
 
-    def handleLogin(self):
-        if (self.id.text() == 'foo' and
-            self.secret.text() == 'bar'):
-            self.accept()
-        else:
-            QtWidgets.QMessageBox.warning(
-                self, 'Error', 'Bad user or password')
+        # parental issues
+        self.parent = parent
 
-    def enter_creds(self):
-        self.exec_()
+        # setup window
+        self.title = 'Settings'
+        self.left = 60
+        self.top = 50
+        self.width = 300
+        self.height = 300
+        self.setWindowTitle(self.title)
+        self.setGeometry(self.left, self.top, self.width, self.height)
 
+        # widgets
+        self.main = QWidget()
+        self.authbox = QGroupBox('Podbean Authentication')
+        self.authidl = QLabel('Client ID')
+        self.authid = QLineEdit()
+        self.authsecretl = QLabel('Client Secret')
+        self.authsecret = QLineEdit()
+        self.authbutt = QPushButton('Update')
+
+        self.authid.setDisabled(True)
+        self.authsecret.setDisabled(True)
+        self.authid.setText(self.parent.config['podbean']['id'])
+        self.authsecret.setText(self.parent.config['podbean']['secret'])
+
+        self.authbutt.clicked.connect(self.cred_update_sig)
+
+        # layouts
+        self.authlay = QGridLayout()
+        self.lay = QGridLayout()
+        self.authbox.setLayout(self.authlay)
+        self.main.setLayout(self.lay)
+
+        # put things in the stuff
+        self.authlay.addWidget(self.authidl, 0, 0)
+        self.authlay.addWidget(self.authid, 0, 1, 1, 2)
+        self.authlay.addWidget(self.authsecretl, 1, 0)
+        self.authlay.addWidget(self.authsecret, 1, 1, 1, 2)
+        self.authlay.addWidget(self.authbutt, 2, 0)
+
+        self.lay.addWidget(self.authbox)
+        self.lay.setRowStretch(1, 4)
+
+        self.setCentralWidget(self.main)
+
+        # to get it on top
+        self.raise_()
+
+    def cred_update_sig(self):
+        state = self.authbutt.text()
+
+        if state == 'Update':
+            self.authid.setDisabled(False)
+            self.authsecret.setDisabled(False)
+            self.authbutt.setText('Set')
+
+        if state == 'Set':
+            self.authid.setDisabled(True)
+            self.authsecret.setDisabled(True)
+            self.authbutt.setText('Update')
+        '''
+        id = self.authid.text()
+        secret = self.authsecret.text()
+        self.parent.pb.update_credentials(id, secret)
+        '''
 
 
 class SimplePodcast(QtWidgets.QMainWindow):
@@ -43,8 +88,8 @@ class SimplePodcast(QtWidgets.QMainWindow):
 
         # window variables
         self.title = 'Simple Podcast'
-        self.left = 10
-        self.top = 10
+        self.left = 50
+        self.top = 50
         self.width = 400
         self.height = 100
 
@@ -56,14 +101,12 @@ class SimplePodcast(QtWidgets.QMainWindow):
 
         # load config file
         with open('config/config.json') as f:
-            self.settings = json.load(f)
-        print(self.settings)
-
-        self.pbc = PodbeanCreds(self)
+            self.config = json.load(f)
+        print(self.config)
 
         # start podbean service
-        pbid = self.settings['podbean']['id']
-        pbsecret = self.settings['podbean']['secret']
+        pbid = self.config['podbean']['id']
+        pbsecret = self.config['podbean']['secret']
         self.pb = podbean.Podbean(pbid, pbsecret)
 
         # audio file
@@ -74,6 +117,9 @@ class SimplePodcast(QtWidgets.QMainWindow):
         self.setupWidgets()
         self.setupLayouts()
         self.build()
+
+        # settings dialog
+        self.settings = Settings(self)
 
         # show
         self.show()
@@ -98,7 +144,7 @@ class SimplePodcast(QtWidgets.QMainWindow):
         # record box
         self.widgets['record-box'] = QGroupBox('Step 2: Get Audio')
         self.widgets['record-file'] = QPushButton('Choose file')
-        self.widgets['record-text'] = QLineEdit()
+        self.widgets['record-text'] = QLabel('No audio selected')
 
         # upload box
         self.widgets['upload-box'] = QGroupBox('Step 3: Upload')
@@ -115,8 +161,30 @@ class SimplePodcast(QtWidgets.QMainWindow):
         # setup
         self.widgets['upload-publish'].setChecked(True)
 
-        #self.widgets['upload-publish'].toggled.connect\
-        #    (lambda:self.btnstate(self.b1))
+        '''
+        THIS PART IS SPECIFIC TO A CHURCH PODCAST AUTO NAMING SCHEME
+        IF YOU DO NOT WANT THIS, REMOVE THIS SECTION
+        '''
+
+        # get time
+        t = datetime.now()
+        year = t.year
+        month = calendar.month_name[t.month]
+        day = t.day
+
+        title = ''
+
+        if t.hour < 14:
+            title = 'Morning'
+        else:
+            title = 'Evening'
+
+        title = f'{title} Service - {month} {day}, {year}'
+        self.widgets['episode-title-text'].setText(title)
+
+        '''
+        END OF SECTION
+        '''
 
     def setupLayouts(self):
         self.layouts = {}
@@ -138,14 +206,15 @@ class SimplePodcast(QtWidgets.QMainWindow):
         recl = self.layouts['record']
         recl.addWidget(self.widgets['record-file'], 0, 0)
         recl.addWidget(self.widgets['record-text'], 0, 1)
+        recl.setColumnStretch(1, 4)
 
         # build upload box layout
         upl = self.layouts['upload']
         upl.addWidget(self.widgets['upload-publish'], 0, 1)
         upl.addWidget(self.widgets['upload-draft'], 0, 2)
-        upl.addWidget(self.widgets['upload'], 1, 0, 1, 3)
-        upl.addWidget(self.widgets['upload-prog'], 2, 0, 1, 3)
-        upl.addWidget(self.widgets['upload-text'], 3, 0, 1, 3)
+        upl.addWidget(self.widgets['upload'], 0, 0)
+        upl.addWidget(self.widgets['upload-prog'], 1, 0, 1, 3)
+        upl.addWidget(self.widgets['upload-text'], 2, 0, 1, 3)
         upl.setColumnStretch(0, 4)
 
         # build episode box layout
@@ -165,24 +234,27 @@ class SimplePodcast(QtWidgets.QMainWindow):
 
     # ## ACTIONS AND SIGNALS ## #
 
-    def creds_sig(self):
-        self.pbc.exec_()
+    def settings_sig(self):
+        #self.pbc.exec_()
+        self.settings.show()
 
     def file_sig(self):
-        loc = self.settings['last file location']
+        loc = self.config['last audio location']
         name, _ = QFileDialog.getOpenFileName(
             self,
             'Open File',
             loc,
             filter='*.mp3')
         if name != '':
+            filepath = name.rsplit('/', 1)
             # get location and store it for next time
-            self.settings['last file location'] = name.rsplit('/', 1)[0]
+            self.config['last audio location'] = filepath[0]
             with open('config/config.json', 'w') as f:
                 json.dump(self.settings, f)
+            self.widgets['record-text'].setText(filepath[1])
 
     def upload_sig(self):
-        # dictionaries are long to type
+        # dictionaries take too long to type
         butt = self.widgets['upload']
         prog = self.widgets['upload-prog']
         text = self.widgets['upload-text']
@@ -201,6 +273,9 @@ class SimplePodcast(QtWidgets.QMainWindow):
 
         # big ol' try/catch
         try:
+            akey = ''
+            pkey = ''
+
             # login
             text.setText('Logging in ...')
             text.repaint()
@@ -211,6 +286,7 @@ class SimplePodcast(QtWidgets.QMainWindow):
             text.setText('Uploading audio ...')
             text.repaint()
             #akey = self.pb.upload_file('audio.madeupext')
+            #pkey = self.pb.upload_file('/home/ben/church.jpg')
             prog.setValue(66)
 
             # get episode deets
@@ -223,8 +299,9 @@ class SimplePodcast(QtWidgets.QMainWindow):
             self.pb.publish_episode(
                 title=title,
                 content=desc,
-                status=status)#,
-                #media_key=akey)
+                status=status,
+                logo_key='',
+                media_key=akey)
 
             prog.setValue(100)
             text.setText('Episode published')
@@ -234,35 +311,6 @@ class SimplePodcast(QtWidgets.QMainWindow):
             text.setText(f'{text.text()} failed')
             print(f'stage: {e.stage}\nreason: {e.reason}')
 
-
-        '''
-        if self.pb.auth():
-            prog.setValue(33)
-        else:
-            text.setText('Login ... Failed')
-
-        # upload audio file
-        text.setText('Uploading audio ...')
-        text.repaint()
-        try:
-            akey = self.pb.upload_file('audio.madeupext')
-        except podbean.PodbeanError as e:
-            print(f'UH OH REASON: {e.reason}')
-            return
-        prog.setValue(66)
-
-        # publish
-        title = self.widgets['episode-title-text'].text()
-        desc = self.widgets['episode-desc-text'].toPlainText()
-        text.setText('Publishing episode ...')
-        text.repaint()
-        self.pb.publish_episode(title=title, content=desc, media_key=akey)
-        # prog.setDisabled(True) # not really for anything
-        # self.pb.publish_episode(title, desc, None, None)
-        prog.setValue(100)
-        text.setText('Episode published')
-        butt.setDisabled(False)
-        '''
     def clean(self):
         print('cleanup')
 

@@ -3,5 +3,7 @@
         "id": "Put client ID here",
         "secret": "Put client secret here"
     },
-    "last file location": "."
+    "last audio location": ".",
+    "last image location": ".",
+    "default image": ""
 }

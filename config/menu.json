@@ -14,8 +14,8 @@
         }
     },
     "Edit": {
-        "Podbean Credentials": {
-            "signal": "creds_sig"
+        "Settings": {
+            "signal": "settings_sig"
         }
     },
     "Help": {
