@@ -3,8 +3,11 @@ import sys
 import json
 import calendar
 from datetime import datetime
-from PyQt5 import QtGui, QtCore, QtWidgets
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QGridLayout
+from PyQt5.QtWidgets import QWidget, QPushButton, QLabel, QLineEdit, QGroupBox,\
+    QPlainTextEdit, QProgressBar, QGroupBox, QPlainTextEdit, QRadioButton,\
+    QFileDialog
 
 from modules import podbean, menubuilder
 
@@ -133,7 +136,7 @@ class Settings(QMainWindow):
             self.parent.logo_file = name
 
 
-class SimplePodcast(QtWidgets.QMainWindow):
+class SimplePodcast(QMainWindow):
     def __init__(self):
         # formalities
         super().__init__()
@@ -393,7 +396,7 @@ class SimplePodcast(QtWidgets.QMainWindow):
             print('HEERE HERE HERE HERE')
             prog.setDisabled(True)
             butt.setDisabled(False)
-            text.setText(f'{text.text()} failed')
+            text.setText(f'{text.text()} failed ({e.reason})')
             print(f'stage: {e.stage}\nreason: {e.reason}')
             return
 

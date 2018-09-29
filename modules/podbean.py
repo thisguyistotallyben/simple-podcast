@@ -61,8 +61,7 @@ class Podbean():
         # error checking
         # TODO: clean this mess up
         if 'error' in r:
-            print(f"failed\nreason: {r['error_description']}")
-            raise PodbeanError('Auth', f"{r['error_description']}")
+            raise PodbeanError('Auth', 'Authentication is invalid')
         else:
             print('Auth success')
             self.token = r['access_token']
@@ -156,7 +155,8 @@ class Podbean():
         # build POST data
         # TODO: actually error check this
         for k in kwargs.keys():
-            if k not in ('title', 'content', 'status', 'type', 'media_key', 'logo_key'):
+            if k not in ('title', 'content', 'status', 'type', 'media_key',
+                         'logo_key'):
                 raise PodbeanError('publish episode', f'invalid arg {k}')
 
         # add necessary stuff
@@ -176,9 +176,11 @@ class Podbean():
         # FIX THIS - JUST FOR TESTING
         audio.export('output.mp3', format='mp3')
 
+
 '''
 Exception Central
 '''
+
 
 # base exception
 class PodbeanError(Exception):
