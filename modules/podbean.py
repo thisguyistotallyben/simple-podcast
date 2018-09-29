@@ -110,8 +110,6 @@ class Podbean():
         else:
             raise PodbeanError('file upload', f'unsupported file type {fext}')
 
-        print(fext, fname, ftype)
-
         # file authorize
         data = {
             'access_token': self.token,
@@ -126,7 +124,6 @@ class Podbean():
             raise PodbeanError('file upload', r['error_description'])
         else:
             print('Get Presigned URL success')
-            # print(r)
             self.presigned_url = r['presigned_url']
             self.file_key = r['file_key']
 
@@ -166,10 +163,12 @@ class Podbean():
         if 'type' not in kwargs.keys():
             kwargs['type'] = 'public'
 
-        print(kwargs)
+        # publish
         r = requests.post(self.publish_url, data=kwargs).json()
 
-        print(r)
+        # error check
+        if 'error' in r:
+            raise PodbeanError('publish episode', r['error'])
 
     def convert(self, fpath):
         audio = AudioSegment.from_wav(fpath)
