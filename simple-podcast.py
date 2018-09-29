@@ -3,11 +3,9 @@ import sys
 import json
 import calendar
 from datetime import datetime
-from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtWidgets import QGridLayout
-from PyQt5.QtWidgets import QWidget, QPushButton, QLabel, QLineEdit, QGroupBox,\
-    QPlainTextEdit, QProgressBar, QGroupBox, QPlainTextEdit, QRadioButton,\
-    QFileDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QPushButton,\
+    QLabel, QLineEdit, QGroupBox, QPlainTextEdit, QProgressBar, QGroupBox,\
+    QPlainTextEdit, QRadioButton, QFileDialog, QGridLayout
 
 from modules import podbean, menubuilder
 
@@ -157,7 +155,7 @@ class SimplePodcast(QMainWindow):
         # load config file
         with open('config/config.json') as f:
             self.config = json.load(f)
-        print(self.config)
+        print('Config file loaded')
 
         # start podbean service
         pbid = self.config['podbean']['id']
@@ -311,13 +309,12 @@ class SimplePodcast(QMainWindow):
     # ## ACTIONS AND SIGNALS ## #
 
     def settings_sig(self):
-        #self.pbc.exec_()
         self.settings.show()
 
     def audio_sig(self):
         loc = self.config['last audio location']
         name, _ = QFileDialog.getOpenFileName(self, 'Open File', loc,
-            filter='*.mp3')
+                                              filter='*.mp3')
         if name != '':
             self.audio_file
             filepath = name.rsplit('/', 1)
@@ -372,8 +369,8 @@ class SimplePodcast(QMainWindow):
             # upload file
             text.setText('Uploading audio ...')
             text.repaint()
-            #akey = self.pb.upload_file('audio.madeupext')
-            #pkey = self.pb.upload_file('/home/ben/church.jpg')
+            # akey = self.pb.upload_file('audio.madeupext')
+            # pkey = self.pb.upload_file('/home/ben/church.jpg')
             prog.setValue(66)
 
             # get episode deets
@@ -403,6 +400,7 @@ class SimplePodcast(QMainWindow):
     def update_config(self):
         with open('config/config.json', 'w') as f:
             json.dump(self.config, f)
+
 
 # QT IT UP
 app = QApplication(sys.argv)
