@@ -78,6 +78,7 @@ class Settings(QMainWindow):
         self.authlay.addWidget(self.authsecretl, 1, 0)
         self.authlay.addWidget(self.authsecret, 1, 1, 1, 2)
         self.authlay.addWidget(self.authbutt, 2, 0)
+        self.authlay.setColumnStretch(1, 4)
 
         self.deflay.addWidget(self.defbutt, 0, 0)
         self.deflay.addWidget(self.deftext, 0, 1)
@@ -278,6 +279,13 @@ class SimplePodcast(QMainWindow):
         mainl.addWidget(self.widgets['logo-box'], 2, 0)
         mainl.addWidget(self.widgets['upload-box'], 3, 0)
 
+        # build episode box layout
+        epl = self.layouts['episode']
+        epl.addWidget(self.widgets['episode-title'], 0, 0)
+        epl.addWidget(self.widgets['episode-title-text'], 0, 1)
+        epl.addWidget(self.widgets['episode-desc'], 1, 0)
+        epl.addWidget(self.widgets['episode-desc-text'], 1, 1)
+
         # build audio box layout
         recl = self.layouts['audio']
         recl.addWidget(self.widgets['audio-file'], 0, 0)
@@ -298,13 +306,6 @@ class SimplePodcast(QMainWindow):
         upl.addWidget(self.widgets['upload-prog'], 1, 0, 1, 3)
         upl.addWidget(self.widgets['upload-text'], 2, 0, 1, 3)
         upl.setColumnStretch(0, 4)
-
-        # build episode box layout
-        epl = self.layouts['episode']
-        epl.addWidget(self.widgets['episode-title'], 0, 0)
-        epl.addWidget(self.widgets['episode-title-text'], 0, 1)
-        epl.addWidget(self.widgets['episode-desc'], 1, 0)
-        epl.addWidget(self.widgets['episode-desc-text'], 1, 1)
 
         # set layouts
         self.widgets['main'].setLayout(mainl)
@@ -355,12 +356,6 @@ class SimplePodcast(QMainWindow):
         text = self.widgets['upload-text']
         eptype = ''
 
-        # get episode type
-        if self.widgets['upload-publish'].isChecked():
-            status = 'publish'
-        else:
-            status = 'draft'
-
         # set GUI
         butt.setDisabled(True)
         prog.setDisabled(False)
@@ -369,35 +364,46 @@ class SimplePodcast(QMainWindow):
         # big ol' try/catch
         try:
             akey = ''
-            pkey = ''
+            lkey = ''
 
-            # login
-            text.setText('Logging in ...')
+            '''AUTHORIZE'''
+            text.setText('Authorizing ...')
             text.repaint()
             self.pb.auth()
-            prog.setValue(33)
+            prog.setValue(25)
 
-            # upload file
-            text.setText('Uploading audio ...')
-            text.repaint()
+            '''UPLOAD AUDIO'''
             if self.audio_file != '':
+                text.setText('Uploading audio ...')
+                text.repaint()
                 akey = self.pb.upload_file(self.audio_file)
-            if self.logo_file != '':
-                pkey = self.pb.upload_file(self.logo_file)
-            prog.setValue(66)
+                prog.setValue(50)
 
-            # get episode deets
-            text.setText('Publishing episode ...')
+            '''UPLOAD LOGO'''
+            if self.logo_file != '':
+                text.setText('Uploading logo ...')
+                text.repaint()
+                lkey = self.pb.upload_file(self.logo_file)
+                prog.setValue(75)
+
+            '''UPLOAD PODCAST'''
+            text.setText('Uploading episode ...')
             text.repaint()
+
+            # get podcast parameters
+            if self.widgets['upload-publish'].isChecked():
+                status = 'publish'
+            else:
+                status = 'draft'
             title = self.widgets['episode-title-text'].text()
             desc = self.widgets['episode-desc-text'].toPlainText()
 
-            # the for-realsies publishing part
+            # upload to podbean
             self.pb.publish_episode(
                 title=title,
                 content=desc,
                 status=status,
-                logo_key='',
+                logo_key=lkey,
                 media_key=akey)
 
             prog.setValue(100)

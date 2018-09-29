@@ -159,6 +159,7 @@ class Podbean():
 
         # build POST data
         # TODO: actually error check this
+        print(kwargs)
         for k in kwargs.keys():
             if k not in ('title', 'content', 'status', 'type', 'media_key',
                          'logo_key'):
@@ -176,7 +177,7 @@ class Podbean():
 
         # error check
         if 'error' in r:
-            raise PodbeanError('publish episode', r['error'])
+            raise PodbeanError('publish episode', r['error_description'])
 
     def convert(self, fpath):
         audio = AudioSegment.from_wav(fpath)
