@@ -369,8 +369,10 @@ class SimplePodcast(QMainWindow):
             # upload file
             text.setText('Uploading audio ...')
             text.repaint()
-            # akey = self.pb.upload_file('audio.madeupext')
-            # pkey = self.pb.upload_file('/home/ben/church.jpg')
+            if self.audio_file != '':
+                akey = self.pb.upload_file(self.audio_file)
+            if self.logo_file != '':
+                pkey = self.pb.upload_file(self.logo_file)
             prog.setValue(66)
 
             # get episode deets
