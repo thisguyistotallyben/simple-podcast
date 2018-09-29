@@ -1,3 +1,12 @@
+'''
+Author:  Benjamin Johnson
+Version: 1.0
+Purpose: A simple dialog for quickly uploading podcast episodes to the Podbean
+         service.  Parts of this program are tailored for church podcasting and
+         are labelled so they can be removed for more general purposes.
+'''
+
+
 import time
 import sys
 import json
@@ -306,7 +315,9 @@ class SimplePodcast(QMainWindow):
 
         self.setCentralWidget(self.widgets['main'])
 
-    # ## ACTIONS AND SIGNALS ## #
+    '''
+    SIGNALS
+    '''
 
     def settings_sig(self):
         self.settings.show()
@@ -392,12 +403,15 @@ class SimplePodcast(QMainWindow):
             prog.setValue(100)
             text.setText('Episode published')
         except podbean.PodbeanError as e:
-            print('HEERE HERE HERE HERE')
             prog.setDisabled(True)
             butt.setDisabled(False)
             text.setText(f'{text.text()} failed ({e.reason})')
             print(f'stage: {e.stage}\nreason: {e.reason}')
             return
+
+    '''
+    HELPER FUNCTIONS
+    '''
 
     def update_config(self):
         with open('config/config.json', 'w') as f:

@@ -1,6 +1,8 @@
-# Author:  Benjamin Johnson
-# Version: 0.1
-# Purpose: A Python3 wrapper for the Podbean API (Python 3.6 or higher)
+'''
+Author:  Benjamin Johnson
+Version: 1.0
+Purpose: A Python3 wrapper for the Podbean API (Python 3.6 or higher)
+'''
 
 import requests
 import json
@@ -39,7 +41,9 @@ class Podbean():
         # episode
         self.ep = Episode()
 
-    # ## AUTHORIZATION LAND # ##
+    '''
+    AUTHORIZATION LAND
+    '''
 
     def update_credentials(self, id, secret):
         self.id = id
@@ -75,7 +79,9 @@ class Podbean():
         '''
         return
 
-    # ## FILE UPLOAD LAND ## #
+    '''
+    FILE UPLOAD LAND
+    '''
 
     def upload_file(self, fpath):
         '''
@@ -141,7 +147,9 @@ class Podbean():
         else:
             raise PodbeanError('file upload', 'upload failed')
 
-    # ## EPISODE LAND # ##
+    '''
+    EPISODE PUBLISH LAND
+    '''
 
     def publish_episode(self, **kwargs):
         '''
