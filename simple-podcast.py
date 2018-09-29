@@ -46,6 +46,8 @@ class Settings(QMainWindow):
         self.defbutt = QPushButton('Choose File')
         self.deftext = QLabel()
 
+        self.defbutt.clicked.connect(self.deflogo_sig)
+
         logo = self.parent.config['default logo']
         if logo == '':
             self.deftext.setText('No default logo chosen')
@@ -92,7 +94,8 @@ class Settings(QMainWindow):
             # set GUI
             self.authid.setDisabled(True)
             self.authsecret.setDisabled(True)
-            self.authbutt.setText('Update')
+            self.authbutt.setText('Setting...')
+            self.authbutt.repaint()
 
             # update everything
             id = self.authid.text()
@@ -100,13 +103,34 @@ class Settings(QMainWindow):
 
             self.parent.config['podbean']['id'] = id
             self.parent.config['podbean']['secret'] = secret
-            self.parent.update_config
+            self.parent.update_config()
             self.parent.pb.update_credentials(id, secret)
+            self.authbutt.setText('Update')
+
         '''
         id = self.authid.text()
         secret = self.authsecret.text()
         self.parent.pb.update_credentials(id, secret)
         '''
+
+    def deflogo_sig(self):
+        loc = self.parent.config['last image location']
+        name, _ = QFileDialog.getOpenFileName(
+            self,
+            'Open File',
+            loc,
+            filter='Images (*.jpg *.JPG *.jpeg *.JPEG *.png *.PNG);;*')
+        if name != '':
+            filepath = name.rsplit('/', 1)
+            # get location and store it for next time
+            self.parent.config['last image location'] = filepath[0]
+            self.parent.config['default logo'] = name
+            self.parent.update_config()
+
+            # update GUI
+            self.deftext.setText(filepath[1])
+            self.parent.widgets['logo-text'].setText(filepath[1])
+            self.parent.logo_file = name
 
 
 class SimplePodcast(QtWidgets.QMainWindow):
@@ -366,10 +390,12 @@ class SimplePodcast(QtWidgets.QMainWindow):
             prog.setValue(100)
             text.setText('Episode published')
         except podbean.PodbeanError as e:
+            print('HEERE HERE HERE HERE')
             prog.setDisabled(True)
             butt.setDisabled(False)
             text.setText(f'{text.text()} failed')
             print(f'stage: {e.stage}\nreason: {e.reason}')
+            return
 
     def update_config(self):
         with open('config/config.json', 'w') as f:
