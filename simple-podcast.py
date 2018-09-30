@@ -6,7 +6,6 @@ Purpose: A simple dialog for quickly uploading podcast episodes to the Podbean
          are labelled so they can be removed for more general purposes.
 '''
 
-
 import time
 import sys
 import json
@@ -14,153 +13,16 @@ import calendar
 from datetime import datetime
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QPushButton,\
     QLabel, QLineEdit, QGroupBox, QPlainTextEdit, QProgressBar, QGroupBox,\
-    QPlainTextEdit, QRadioButton, QFileDialog, QGridLayout
+    QPlainTextEdit, QRadioButton, QFileDialog, QGridLayout, QMessageBox
 
+from spsettings import Settings
 from modules import podbean, menubuilder
-
-
-class Settings(QMainWindow):
-    def __init__(self, parent=None):
-        super().__init__()
-
-        # parental issues
-        self.parent = parent
-
-        # setup window
-        self.title = 'Settings'
-        self.left = 60
-        self.top = 50
-        self.width = 300
-        self.height = 300
-        self.setWindowTitle(self.title)
-        self.setGeometry(self.left, self.top, self.width, self.height)
-
-        # widgets
-        self.main = QWidget()
-
-        self.authbox = QGroupBox('Podbean Authentication')
-        self.authidl = QLabel('Client ID')
-        self.authid = QLineEdit()
-        self.authsecretl = QLabel('Client Secret')
-        self.authsecret = QLineEdit()
-        self.authbutt = QPushButton('Update')
-
-        self.authid.setDisabled(True)
-        self.authsecret.setDisabled(True)
-        self.authid.setText(self.parent.config['podbean']['id'])
-        self.authsecret.setText(self.parent.config['podbean']['secret'])
-
-        self.authbutt.clicked.connect(self.cred_update_sig)
-
-        self.defbox = QGroupBox('Default Podcast Logo')
-        self.defbutt = QPushButton('Choose File')
-        self.deftext = QLabel()
-
-        self.defbutt.clicked.connect(self.deflogo_sig)
-
-        logo = self.parent.config['default logo']
-        if logo == '':
-            self.deftext.setText('No default logo chosen')
-        else:
-            self.deftext.setText(logo)
-
-        # layouts
-        self.authlay = QGridLayout()
-        self.deflay = QGridLayout()
-        self.lay = QGridLayout()
-        self.authbox.setLayout(self.authlay)
-        self.defbox.setLayout(self.deflay)
-        self.main.setLayout(self.lay)
-
-        # put things in the stuff
-        self.authlay.addWidget(self.authidl, 0, 0)
-        self.authlay.addWidget(self.authid, 0, 1, 1, 2)
-        self.authlay.addWidget(self.authsecretl, 1, 0)
-        self.authlay.addWidget(self.authsecret, 1, 1, 1, 2)
-        self.authlay.addWidget(self.authbutt, 2, 0)
-        self.authlay.setColumnStretch(1, 4)
-
-        self.deflay.addWidget(self.defbutt, 0, 0)
-        self.deflay.addWidget(self.deftext, 0, 1)
-        self.deflay.setColumnStretch(1, 4)
-
-        self.lay.addWidget(self.authbox)
-        self.lay.addWidget(self.defbox)
-        self.lay.setRowStretch(2, 4)
-
-        self.setCentralWidget(self.main)
-
-        # to get it on top
-        self.raise_()
-
-    def cred_update_sig(self):
-        state = self.authbutt.text()
-
-        if state == 'Update':
-            self.authid.setDisabled(False)
-            self.authsecret.setDisabled(False)
-            self.authbutt.setText('Set')
-
-        if state == 'Set':
-            # set GUI
-            self.authid.setDisabled(True)
-            self.authsecret.setDisabled(True)
-            self.authbutt.setText('Setting...')
-            self.authbutt.repaint()
-
-            # update everything
-            id = self.authid.text()
-            secret = self.authsecret.text()
-
-            self.parent.config['podbean']['id'] = id
-            self.parent.config['podbean']['secret'] = secret
-            self.parent.update_config()
-            self.parent.pb.update_credentials(id, secret)
-            self.authbutt.setText('Update')
-
-        '''
-        id = self.authid.text()
-        secret = self.authsecret.text()
-        self.parent.pb.update_credentials(id, secret)
-        '''
-
-    def deflogo_sig(self):
-        loc = self.parent.config['last image location']
-        name, _ = QFileDialog.getOpenFileName(
-            self,
-            'Open File',
-            loc,
-            filter='Images (*.jpg *.JPG *.jpeg *.JPEG *.png *.PNG);;*')
-        if name != '':
-            filepath = name.rsplit('/', 1)
-            # get location and store it for next time
-            self.parent.config['last image location'] = filepath[0]
-            self.parent.config['default logo'] = name
-            self.parent.update_config()
-
-            # update GUI
-            self.deftext.setText(filepath[1])
-            self.parent.widgets['logo-text'].setText(filepath[1])
-            self.parent.logo_file = name
 
 
 class SimplePodcast(QMainWindow):
     def __init__(self):
         # formalities
         super().__init__()
-
-        # window variables
-        self.title = 'Simple Podcast'
-        self.left = 50
-        self.top = 50
-        self.width = 400
-        self.height = 100
-
-        # setup menu
-        self.mb = menubuilder.MenuBuilder()
-        self.menub = self.menuBar()
-        self.menu = self.mb.generate(self, 'config/menu.json')
-        self.mb.set(self.menu, self.menub)
 
         # load config file
         with open('config/config.json') as f:
@@ -172,15 +34,14 @@ class SimplePodcast(QMainWindow):
         pbsecret = self.config['podbean']['secret']
         self.pb = podbean.Podbean(pbid, pbsecret)
 
-        # audio file
-        self.audio_file = ''
-        self.logo_file = self.config['default logo']
-
         # setup
         self.setupWindow()
         self.setupWidgets()
         self.setupLayouts()
         self.build()
+
+        # set state
+        self.set_default_state()
 
         # settings dialog
         self.settings = Settings(self)
@@ -189,8 +50,21 @@ class SimplePodcast(QMainWindow):
         self.show()
 
     def setupWindow(self):
+        # variables
+        self.title = 'Simple Podcast'
+        self.left = 50
+        self.top = 50
+        self.width = 400
+        self.height = 100
+
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
+
+        # menu
+        self.mb = menubuilder.MenuBuilder()
+        self.menub = self.menuBar()
+        self.menu = self.mb.generate(self, 'config/menu.json')
+        self.mb.set(self.menu, self.menub)
 
     def setupWidgets(self):
         self.widgets = {}
@@ -208,12 +82,12 @@ class SimplePodcast(QMainWindow):
         # audio box
         self.widgets['audio-box'] = QGroupBox('Step 2: Select Audio')
         self.widgets['audio-file'] = QPushButton('Choose file')
-        self.widgets['audio-text'] = QLabel('No audio selected')
+        self.widgets['audio-text'] = QLabel()
 
         # logo box
         self.widgets['logo-box'] = QGroupBox('Step 3: Select Logo')
         self.widgets['logo-file'] = QPushButton('Choose File')
-        self.widgets['logo-text'] = QLabel('No image selected')
+        self.widgets['logo-text'] = QLabel()
 
         # upload box
         self.widgets['upload-box'] = QGroupBox('Step 4: Upload')
@@ -227,39 +101,6 @@ class SimplePodcast(QMainWindow):
         self.widgets['upload'].clicked.connect(self.upload_sig)
         self.widgets['audio-file'].clicked.connect(self.audio_sig)
         self.widgets['logo-file'].clicked.connect(self.logo_sig)
-
-        # setup
-        self.widgets['upload-publish'].setChecked(True)
-
-        logo = self.config['default logo']
-        if logo != '':
-            self.widgets['logo-text'].setText(logo.rsplit('/', 1)[1])
-
-        '''
-        THIS PART IS SPECIFIC TO A CHURCH PODCAST AUTO NAMING SCHEME
-        IF YOU DO NOT WANT THIS, REMOVE THIS SECTION
-        '''
-
-        # get time
-        t = datetime.now()
-        year = t.year
-        month = calendar.month_name[t.month]
-        day = t.day
-
-        # set title
-        title = ''
-        if t.hour < 14:
-            title = 'Morning'
-        else:
-            title = 'Evening'
-        title = f'{title} Service - {month} {day}, {year}'
-
-        # set title box
-        self.widgets['episode-title-text'].setText(title)
-
-        '''
-        END OF SECTION
-        '''
 
     def setupLayouts(self):
         self.layouts = {}
@@ -322,6 +163,12 @@ class SimplePodcast(QMainWindow):
 
     def settings_sig(self):
         self.settings.show()
+
+    def about_sig(self):
+        QMessageBox.about(self, 'About',
+                          ('Simple Podcast\n\n'
+                           'Author - Benjamin Johnson\n'
+                           'Version - 1.0'))
 
     def audio_sig(self):
         loc = self.config['last audio location']
@@ -418,6 +265,51 @@ class SimplePodcast(QMainWindow):
     '''
     HELPER FUNCTIONS
     '''
+
+    def set_default_state(self):
+        # set variables
+        self.audio_file = ''
+        self.logo_file = self.config['default logo']
+
+        # set GUI
+        self.widgets['episode-title-text'].setText('')
+        self.widgets['episode-desc-text'].clear()
+
+        self.widgets['audio-text'].setText('No audio selected')
+
+        logo = self.config['default logo']
+        if logo != '':
+            self.widgets['logo-text'].setText(logo.rsplit('/', 1)[1])
+        else:
+            self.widgets['logo-text'].setText('No image selected')
+
+        self.widgets['upload-publish'].setChecked(True)
+
+        '''
+        THIS PART IS SPECIFIC TO A CHURCH PODCAST AUTO NAMING SCHEME
+        IF YOU DO NOT WANT THIS, REMOVE THIS SECTION
+        '''
+
+        # get time
+        t = datetime.now()
+        year = t.year
+        month = calendar.month_name[t.month]
+        day = t.day
+
+        # set title
+        title = ''
+        if t.hour < 14:
+            title = 'Morning'
+        else:
+            title = 'Evening'
+        title = f'{title} Service - {month} {day}, {year}'
+
+        # set title box
+        self.widgets['episode-title-text'].setText(title)
+
+        '''
+        END OF SECTION
+        '''
 
     def update_config(self):
         with open('config/config.json', 'w') as f:

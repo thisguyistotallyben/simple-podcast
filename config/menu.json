@@ -1,10 +1,7 @@
 {
     "File": {
         "New": {
-
-        },
-        "Load Audio": {
-
+            "signal": "set_default_state"
         },
         "Separator1": {
             "separator": "True"
@@ -20,7 +17,7 @@
     },
     "Help": {
         "About": {
-
+            "signal": "about_sig"
         }
     }
 }
